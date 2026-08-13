@@ -1,10 +1,10 @@
-// app/api/chat/route.ts
 import { openai } from "@ai-sdk/openai";
-import { streamText } from "ai";
+import { convertToModelMessages, streamText } from "ai";
 import { searchChunks } from "@/lib/rag/search";
 
 export async function POST(req: Request) {
   const { messages } = await req.json();
+
   const lastMessage = messages[messages.length - 1];
   const lastMessageText = lastMessage.parts
     ? lastMessage.parts.find((p: any) => p.type === "text")?.text
@@ -15,10 +15,11 @@ export async function POST(req: Request) {
   }
 
   const relevantChunks = await searchChunks(lastMessageText);
-
   const context = relevantChunks
     .map((c) => `Source: ${c.documentTitle}\n${c.content}`)
     .join("\n\n---\n\n");
+
+  const modelMessages = await convertToModelMessages(messages); // <- await ici
 
   const result = streamText({
     model: openai("gpt-4o-mini"),
@@ -26,7 +27,7 @@ export async function POST(req: Request) {
 
 Contexte:
 ${context}`,
-    messages,
+    messages: modelMessages, // <- variable déjà résolue, plus de Promise
   });
 
   return result.toUIMessageStreamResponse();

@@ -1,6 +1,7 @@
 'use client';
 
 import { useChat } from '@ai-sdk/react';
+import { isTextUIPart } from 'ai';
 import { useState } from 'react';
 
 export default function ChatPage() {
@@ -10,30 +11,46 @@ export default function ChatPage() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!input.trim()) return;
-    sendMessage({ parts: [{ type: 'text', text: input }], role: 'user' });
+    sendMessage({ text: input });
     setInput('');
   };
 
   return (
-    <div className="max-w-2xl mx-auto p-4">
-      <div className="space-y-4 mb-4">
+    <div style={{ maxWidth: 640, margin: '0 auto', padding: 16, fontFamily: 'sans-serif' }}>
+      <h1 style={{ fontSize: 20, fontWeight: 700, marginBottom: 16 }}>Autonomo RAG</h1>
+
+      <div style={{ display: 'flex', flexDirection: 'column', gap: 12, marginBottom: 16 }}>
         {messages.map((m) => (
-          <div key={m.id || Math.random().toString()} className={m.role === 'user' ? 'text-right' : 'text-left'}>
-            <p className="inline-block bg-gray-100 rounded-lg px-3 py-2">
-              {m.parts ? m.parts.map((p, i) => (p.type === 'text' ? <span key={i}>{p.text}</span> : null)) : (m as any).content}
-            </p>
+          <div
+            key={m.id}
+            style={{
+              alignSelf: m.role === 'user' ? 'flex-end' : 'flex-start',
+              background: m.role === 'user' ? '#2563eb' : '#f3f4f6',
+              color: m.role === 'user' ? '#fff' : '#111',
+              borderRadius: 12,
+              padding: '8px 14px',
+              maxWidth: '80%',
+            }}
+          >
+            {(m.parts ?? []).filter(isTextUIPart).map((p, i) => (
+              <span key={i}>{p.text}</span>
+            ))}
           </div>
         ))}
       </div>
 
-      <form onSubmit={handleSubmit} className="flex gap-2">
+      <form onSubmit={handleSubmit} style={{ display: 'flex', gap: 8 }}>
         <input
           value={input}
           onChange={(e) => setInput(e.target.value)}
-          placeholder="Pose ta question sur le statut auto-entrepreneur..."
-          className="flex-1 border rounded-lg px-3 py-2"
+          placeholder="Pose ta question..."
+          style={{ flex: 1, border: '1px solid #d1d5db', borderRadius: 8, padding: '8px 12px', fontSize: 14 }}
         />
-        <button type="submit" disabled={status !== 'ready'} className="bg-black text-white px-4 py-2 rounded-lg">
+        <button
+          type="submit"
+          disabled={status !== 'ready'}
+          style={{ background: '#111', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', cursor: 'pointer', opacity: status !== 'ready' ? 0.5 : 1 }}
+        >
           Envoyer
         </button>
       </form>
