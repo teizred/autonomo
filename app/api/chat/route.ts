@@ -30,5 +30,12 @@ ${context}`,
     messages: modelMessages, // <- variable déjà résolue, plus de Promise
   });
 
-  return result.toUIMessageStreamResponse();
+  const sources = relevantChunks.map((c) => ({
+    title: c.documentTitle,
+    excerpt: c.content.slice(0, 150),
+  }));
+
+  return result.toUIMessageStreamResponse({
+    messageMetadata: () => ({ sources }),
+  });
 }
